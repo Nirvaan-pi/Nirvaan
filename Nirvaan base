@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard - Tasks & Homework</title>
+  <style>
+    :root {
+      --bg: #0f1724;
+      --card: #0b1220;
+      --muted: #94a3b8;
+      --accent: #60a5fa;
+      --done: #16a34a;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0 }
+    body {
+      font-family: Inter, system-ui, Segoe UI, Arial;
+      min-height: 100vh;
+      background: linear-gradient(180deg,#071029 0%, #0b1220 100%);
+      color: #e6eef8;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: var(--card);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    header h1 { font-size: 20px }
+    nav { display: flex; gap: 12px }
+    nav button {
+      background: transparent;
+      border: 0;
+      color: var(--muted);
+      font-size: 15px;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    nav button.active, nav button:hover {
+      background: var(--accent);
+      color: #04233a;
+    }
+    main { padding: 24px; max-width: 960px; margin: auto; flex: 1 }
+    .page { display: none; animation: fade 0.3s ease }
+    .page.active { display: block }
+    @keyframes fade { from {opacity:0} to {opacity:1} }
+
+    .new-row { display: flex; gap: 8px; margin-bottom: 10px }
+    input[type=text] {
+      flex: 1; padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      color: inherit;
+    }
+    button.primary {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 0;
+      background: var(--accent);
+      color: #04233a;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    ul { list-style: none; display: flex; flex-direction: column; gap: 8px }
+    li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.03);
+      transition: transform 0.2s;
+    }
+    li:hover { transform: scale(1.01); background: rgba(255,255,255,0.06) }
+    .left { display: flex; gap: 10px; align-items: center }
+    .dot { width: 12px; height: 12px; border-radius: 50% }
+    .dot.pending { background: var(--accent) }
+    .dot.done { background: var(--done) }
+    .title { font-size: 14px; word-break: break-word }
+    .title.done { text-decoration: line-through; opacity: 0.6; color: var(--muted) }
+    .actions { display: flex; gap: 6px }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 6px 8px;
+      border-radius: 8px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.1); color: #fff }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .stat {
+      background: rgba(255,255,255,0.05);
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .stat h3 { font-size: 20px }
+    .stat p { margin-top: 6px; font-size: 14px; color: var(--muted) }
+    footer { margin: 20px 0; text-align: center; color: var(--muted); font-size: 13px }
+    .search-box { margin: 12px 0; display: flex; gap: 8px }
+    .search-box input { flex: 1; padding: 8px; border-radius: 8px; border: none }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="greeting">My Dashboard</h1>
+    <nav>
+      <button data-page="dashboard" class="active">Dashboard</button>
+      <button data-page="tasks">Tasks</button>
+      <button data-page="homework">Homework</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Dashboard -->
+    <section id="dashboard" class="page active">
+      <h2>Overview</h2>
+      <div class="stats">
+        <div class="stat"><h3 id="tasksCount">0</h3><p>Tasks Today</p></div>
+        <div class="stat"><h3 id="hwCount">0</h3><p>Homework Today</p></div>
+        <div class="stat"><h3 id="doneCount">0</h3><p>Completed</p></div>
+      </div>
+      <footer id="todayDate"></footer>
+    </section>
+
+    <!-- Tasks -->
+    <section id="tasks" class="page">
+      <h2>Tasks</h2>
+      <div class="new-row">
+        <input id="taskInput" placeholder="Add a task (e.g. Science)" />
+        <button id="addTask" class="primary">Add</button>
+      </div>
+      <div class="search-box">
+        <input id="taskSearch" placeholder="Search tasks..." />
+        <button id="markAllTasks" class="btn-ghost">Mark All Done</button>
+      </div>
+      <ul id="tasksList"></ul>
+      <div style="margin-top:12px;text-align:right">
+        <button id="clearTasks" class="btn-ghost">Clear all</button>
+      </div>
+    </section>
+
+    <!-- Homework -->
+    <section id="homework" class="page">
+      <h2>Homework</h2>
+      <div class="new-row">
+        <input id="hwInput" placeholder="Add homework (e.g. Science - Chapter 3)" />
+        <button id="addHw" class="primary">Add</button>
+      </div>
+      <div class="search-box">
+        <input id="hwSearch" placeholder="Search homework..." />
+        <button id="markAllHw" class="btn-ghost">Mark All Done</button>
+      </div>
+      <ul id="hwList"></ul>
+      <div style="margin-top:12px;text-align:right">
+        <button id="clearHw" class="btn-ghost">Clear all</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const today = new Date();
+    document.getElementById('todayDate').textContent =
+      today.toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'short', day:'numeric' });
+
+    const key = 'todo_'+ new Date().toISOString().slice(0,10);
+    function genId(){ return Math.random().toString(36).slice(2,9); }
+
+    function loadState(){
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : {username:"",tasks:[],homework:[]};
+      } catch(e){ return {username:"",tasks:[],homework:[]} }
+    }
+
+    function saveState(){ localStorage.setItem(key, JSON.stringify(state)); updateStats(); }
+
+    let state = loadState();
+    const tasksList=document.getElementById('tasksList');
+    const hwList=document.getElementById('hwList');
+
+    function render(){
+      tasksList.innerHTML='';
+      state.tasks.forEach(item=>{
+        const li=document.createElement('li');
+        const left=document.createElement('div'); left.className='left';
+        const dot=document.createElement('span'); dot.className='dot ' + (item.done?'done':'pending');
+        const title=document.createElement('span'); title.className='title'; title.textContent=item.title;
+        if(item.done) title.classList.add('done');
+        left.appendChild(dot); left.appendChild(title);
+
+        const actions=document.createElement('div'); actions.className='actions';
+        const complete=document.createElement('button'); complete.className='btn-ghost'; complete.textContent=item.done?'Undo':'Complete';
+        complete.onclick=()=>{item.done=!item.done; saveState(); render();};
+        const edit=document.createElement('button'); edit.className='btn-ghost'; edit.textContent='Edit';
+        edit.onclick=()=>{const v=prompt('Edit task:', item.title); if(v){item.title=v; saveState(); render();}};
+        const del=document.createElement('button'); del.className='btn-ghost'; del.textContent='Delete';
+        del.onclick=()=>{state.tasks=state.tasks.filter(t=>t.id!==item.id); saveState(); render();};
+        actions.append(complete,edit,del);
+
+        li.append(left,actions);
+        tasksList.appendChild(li);
+      });
+
+      hwList.innerHTML='';
+      state.homework.forEach(item=>{
+        const li=document.createElement('li');
+        const left=document.createElement('div'); left.className='left';
+        const dot=document.createElement('span'); dot.className='dot ' + (item.done?'done':'pending');
+        const title=document.createElement('span'); title.className='title'; title.textContent=item.title;
+        if(item.done) title.classList.add('done');
+        left.appendChild(dot); left.appendChild(title);
+
+        const actions=document.createElement('div'); actions.className='actions';
+        const complete=document.createElement('button'); complete.className='btn-ghost'; complete.textContent=item.done?'Undo':'Complete';
+        complete.onclick=()=>{item.done=!item.done; saveState(); render();};
+        const edit=document.createElement('button'); edit.className='btn-ghost'; edit.textContent='Edit';
+        edit.onclick=()=>{const v=prompt('Edit homework:', item.title); if(v){item.title=v; saveState(); render();}};
+        const del=document.createElement('button'); del.className='btn-ghost'; del.textContent='Delete';
+        del.onclick=()=>{state.homework=state.homework.filter(h=>h.id!==item.id); saveState(); render();};
+        actions.append(complete,edit,del);
+
+        li.append(left,actions);
+        hwList.appendChild(li);
+      });
+
+      updateStats();
+    }
+
+    // Add handlers
+    document.getElementById('addTask').onclick=()=>{
+      const v=document.getElementById('taskInput').value.trim();
+      if(v){ state.tasks.push({id:genId(),title:v,done:false}); document.getElementById('taskInput').value=''; saveState(); render(); }
+    };
+    document.getElementById('taskInput').onkeydown=e=>{if(e.key==='Enter')document.getElementById('addTask').click();};
+
+    document.getElementById('addHw').onclick=()=>{
+      const v=document.getElementById('hwInput').value.trim();
+      if(v){ state.homework.push({id:genId(),title:v,done:false}); document.getElementById('hwInput').value=''; saveState(); render(); }
+    };
+    document.getElementById('hwInput').onkeydown=e=>{if(e.key==='Enter')document.getElementById('addHw').click();};
+
+    document.getElementById('clearTasks').onclick=()=>{ if(confirm('Clear all tasks?')){state.tasks=[]; saveState(); render();} };
+    document.getElementById('clearHw').onclick=()=>{ if(confirm('Clear all homework?')){state.homework=[]; saveState(); render();} };
+
+    document.getElementById('markAllTasks').onclick=()=>{ state.tasks.forEach(t=>t.done=true); saveState(); render(); };
+    document.getElementById('markAllHw').onclick=()=>{ state.homework.forEach(h=>h.done=true); saveState(); render(); };
+
+    // Search filters
+    document.getElementById('taskSearch').oninput=e=>{
+      const q=e.target.value.toLowerCase();
+      Array.from(tasksList.children).forEach(li=>{
+        const t=li.querySelector('.title').textContent.toLowerCase();
+        li.style.display = t.includes(q)?'flex':'none';
+      });
+    };
+    document.getElementById('hwSearch').oninput=e=>{
+      const q=e.target.value.toLowerCase();
+      Array.from(hwList.children).forEach(li=>{
+        const t=li.querySelector('.title').textContent.toLowerCase();
+        li.style.display = t.includes(q)?'flex':'none';
+      });
+    };
+
+    function updateStats(){
+      document.getElementById('tasksCount').textContent = state.tasks.length;
+      document.getElementById('hwCount').textContent = state.homework.length;
+      document.getElementById('doneCount').textContent = state.tasks.filter(t=>t.done).length + state.homework.filter(h=>h.done).length;
+    }
+
+    // Navigation
+    document.querySelectorAll('nav button').forEach(btn=>{
+      btn.onclick=()=>{
+        document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+        document.getElementById(btn.dataset.page).classList.add('active');
+      };
+    });
+
+    // Greeting
+    if(!state.username){
+      const name=prompt("Enter your name:");
+      if(name){ state.username=name; saveState(); }
+    }
+    if(state.username){ document.getElementById('greeting').textContent = `Hi, ${state.username}!`; }
+
+    render();
+  </script>
+</body>
+</html>
