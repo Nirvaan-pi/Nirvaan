@@ -23,7 +23,10 @@
   <!-- Dashboard -->
   <div id="app" class="hidden max-w-6xl mx-auto">
     <header class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-semibold">Nirvaan • Task Dashboard</h1>
+      <h1 class="text-2xl font-semibold flex items-center gap-3">
+        <img id="userPhoto" class="w-8 h-8 rounded-full hidden" />
+        <span id="userName">Nirvaan • Task Dashboard</span>
+      </h1>
       <div class="flex items-center gap-3">
         <button id="logoutBtn" onclick="googleLogout()" class="px-3 py-1 rounded-md border text-red-500">
           Logout
@@ -36,12 +39,10 @@
   </div>
 
   <script>
-    // Your Firebase Config (replace with your own from Firebase Console)
+    // Your Firebase Config (from your message)
     var config = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      appId: "YOUR_APP_ID",
+      apiKey: "AIzaSyA26Q7zeJ1pfgsBh6iJdVuS24_X7bvcvPY",
+      authDomain: "bionic-client-467818-u2.firebaseapp.com",
     };
     firebase.initializeApp(config);
 
@@ -49,10 +50,17 @@
 
     // Check if user already logged in
     function checkAuth() {
-      const user = localStorage.getItem("nirvaan_user");
+      const user = JSON.parse(localStorage.getItem("nirvaan_user"));
       if (user) {
         document.getElementById("authSection").classList.add("hidden");
         document.getElementById("app").classList.remove("hidden");
+        if (user.photo) {
+          document.getElementById("userPhoto").src = user.photo;
+          document.getElementById("userPhoto").classList.remove("hidden");
+        }
+        if (user.name) {
+          document.getElementById("userName").innerText = user.name + " • Task Dashboard";
+        }
       }
     }
 
