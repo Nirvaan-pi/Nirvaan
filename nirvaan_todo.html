@@ -3,211 +3,87 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dashboard - Tasks & Homework</title>
+  <title>Nirvaan • Task Dashboard with Google Sign-In</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.0/firebase.js"></script>
   <style>
-    :root{--bg:#0f1724;--card:#0b1220;--muted:#94a3b8;--accent:#60a5fa;--done:#16a34a}
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Inter,system-ui,Segoe UI,Arial; min-height:100vh; background:linear-gradient(180deg,#071029 0%, #0b1220 100%); color:#e6eef8;}
-    header{background:#0b1220;padding:16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.05)}
-    header h1{font-size:20px}
-    nav{display:flex;gap:12px}
-    nav button{background:transparent;border:0;color:var(--muted);font-size:15px;cursor:pointer;padding:6px 10px;border-radius:6px;transition:all 0.2s}
-    nav button.active, nav button:hover{background:var(--accent);color:#04233a}
-    main{padding:24px;max-width:960px;margin:auto}
-    .page{display:none}
-    .page.active{display:block}
-    .new-row{display:flex;gap:8px;margin-bottom:10px}
-    input[type=text]{flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:inherit}
-    button.primary{padding:8px 10px;border-radius:8px;border:0;background:var(--accent);color:#04233a;cursor:pointer}
-    ul{list-style:none;display:flex;flex-direction:column;gap:8px}
-    li{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02)}
-    .left{display:flex;gap:10px;align-items:center}
-    .dot{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.2)}
-    .title{font-size:14px;word-break:break-word}
-    .title.done{text-decoration:line-through;opacity:0.6;color:var(--muted)}
-    .actions{display:flex;gap:6px}
-    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.1);padding:6px 8px;border-radius:8px;color:var(--muted);cursor:pointer;font-size:13px;transition:all 0.2s}
-    .btn-ghost:hover{background:rgba(255,255,255,0.05);color:#fff}
-    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:20px}
-    .stat{background:rgba(255,255,255,0.05);padding:16px;border-radius:12px;text-align:center}
-    .stat h3{font-size:18px}
-    .stat p{margin-top:6px;font-size:14px;color:var(--muted)}
-    footer{margin-top:20px;text-align:center;color:var(--muted);font-size:13px}
+    .card-shadow { box-shadow: 0 6px 18px rgba(20,23,28,0.08); }
   </style>
 </head>
-  <script src="https://www.gstatic.com/firebasejs/8.0/firebase.js"></script>
-<script>
-  var config = {
-    apiKey: "AIzaSyA26Q7zeJ1pfgsBh6iJdVuS24_X7bvcvPY",
-    authDomain: "bionic-client-467818-u2.firebaseapp.com",
-  };
-  firebase.initializeApp(config);
-</script>
-<body>
-  <header>
-    <h1>My Dashboard</h1>
-    <nav>
-      <button data-page="dashboard" class="active">Dashboard</button>
-      <button data-page="tasks">Tasks</button>
-      <button data-page="homework">Homework</button>
-    </nav>
-  </header>
-  <main>
-    <!-- Dashboard -->
-    <section id="dashboard" class="page active">
-      <h2>Overview</h2>
-      <div class="stats">
-        <div class="stat"><h3 id="tasksCount">0</h3><p>Tasks Today</p></div>
-        <div class="stat"><h3 id="hwCount">0</h3><p>Homework Today</p></div>
-        <div class="stat"><h3 id="doneCount">0</h3><p>Completed</p></div>
-      </div>
-      <footer id="todayDate"></footer>
-    </section>
+<body class="bg-slate-50 text-slate-900 min-h-screen p-6 dark:bg-slate-900 dark:text-slate-100">
 
-    <!-- Tasks -->
-    <section id="tasks" class="page">
-      <h2>Tasks</h2>
-      <div class="new-row">
-        <input id="taskInput" placeholder="Add a task (e.g. Science)" />
-        <button id="addTask" class="primary">Add</button>
-      </div>
-      <ul id="tasksList"></ul>
-      <div style="margin-top:12px;text-align:right"><button id="clearTasks" class="btn-ghost">Clear all</button></div>
-    </section>
+  <!-- Sign-In Section -->
+  <div id="authSection" class="max-w-md mx-auto mt-20 p-6 rounded-xl bg-white card-shadow dark:bg-slate-800">
+    <h1 class="text-2xl font-bold mb-4 text-center">Sign In</h1>
+    <button onclick="googleLogin()" class="w-full py-2 bg-red-500 text-white rounded-md">
+      Sign in with Google
+    </button>
+  </div>
 
-    <!-- Homework -->
-    <section id="homework" class="page">
-      <h2>Homework</h2>
-      <div class="new-row">
-        <input id="hwInput" placeholder="Add homework (e.g. Science - Chapter 3)" />
-        <button id="addHw" class="primary">Add</button>
+  <!-- Dashboard -->
+  <div id="app" class="hidden max-w-6xl mx-auto">
+    <header class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-semibold">Nirvaan • Task Dashboard</h1>
+      <div class="flex items-center gap-3">
+        <button id="logoutBtn" onclick="googleLogout()" class="px-3 py-1 rounded-md border text-red-500">
+          Logout
+        </button>
       </div>
-      <ul id="hwList"></ul>
-      <div style="margin-top:12px;text-align:right"><button id="clearHw" class="btn-ghost">Clear all</button></div>
-    </section>
-  </main>
+    </header>
+    <main>
+      <p class="text-center text-gray-500">Welcome! Your dashboard is ready after sign in.</p>
+    </main>
+  </div>
 
   <script>
-    const today = new Date();
-    document.getElementById('todayDate').textContent = today.toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'short', day:'numeric' });
-    const key = 'todo_'+ new Date().toISOString().slice(0,10);
+    // Your Firebase Config (replace with your own from Firebase Console)
+    var config = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      appId: "YOUR_APP_ID",
+    };
+    firebase.initializeApp(config);
 
-    function genId(){ return Math.random().toString(36).slice(2,9); }
+    var provider = new firebase.auth.GoogleAuthProvider();
 
-    function loadState(){
-      try{
-        const raw = localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : {tasks:[{id:genId(),title:'Science',done:false}],homework:[{id:genId(),title:'Science - Read Chapter 5',done:false}]};
-      }catch(e){return {tasks:[],homework:[]}}
+    // Check if user already logged in
+    function checkAuth() {
+      const user = localStorage.getItem("nirvaan_user");
+      if (user) {
+        document.getElementById("authSection").classList.add("hidden");
+        document.getElementById("app").classList.remove("hidden");
+      }
     }
 
-    function saveState(){ localStorage.setItem(key, JSON.stringify(state)); updateStats(); }
-
-    let state = loadState();
-
-    const tasksList=document.getElementById('tasksList');
-    const hwList=document.getElementById('hwList');
-
-    function render(){
-      tasksList.innerHTML='';
-      state.tasks.forEach(item=>{
-        const li=document.createElement('li');
-        const left=document.createElement('div'); left.className='left';
-        const dot=document.createElement('span'); dot.className='dot';
-        const title=document.createElement('span'); title.className='title'; title.textContent=item.title;
-        if(item.done) title.classList.add('done');
-        left.appendChild(dot); left.appendChild(title);
-        const actions=document.createElement('div'); actions.className='actions';
-
-        const complete=document.createElement('button'); complete.className='btn-ghost'; complete.textContent=item.done?'Undo':'Complete';
-        complete.addEventListener('click',()=>{item.done=!item.done; saveState(); render();});
-
-        const edit=document.createElement('button'); edit.className='btn-ghost'; edit.textContent='Edit';
-        edit.addEventListener('click',()=>{
-          const newTitle=prompt('Edit task:', item.title);
-          if(newTitle!==null && newTitle.trim()){ item.title=newTitle.trim(); saveState(); render(); }
+    // Google Login
+    function googleLogin() {
+      firebase.auth().signInWithPopup(provider)
+        .then(function(result) {
+          var user = result.user;
+          localStorage.setItem("nirvaan_user", JSON.stringify({
+            name: user.displayName,
+            email: user.email,
+            photo: user.photoURL
+          }));
+          checkAuth();
+          console.log("Signed in as:", user.displayName, user.email);
+        })
+        .catch(function(error) {
+          console.error("Error:", error);
+          alert("Login failed: " + error.message);
         });
-
-        const del=document.createElement('button'); del.className='btn-ghost'; del.textContent='Delete';
-        del.addEventListener('click',()=>{state.tasks=state.tasks.filter(t=>t.id!==item.id); saveState(); render();});
-
-        actions.appendChild(complete);
-        actions.appendChild(edit);
-        actions.appendChild(del);
-        li.appendChild(left); li.appendChild(actions);
-        tasksList.appendChild(li);
-      });
-
-      hwList.innerHTML='';
-      state.homework.forEach(item=>{
-        const li=document.createElement('li');
-        const left=document.createElement('div'); left.className='left';
-        const dot=document.createElement('span'); dot.className='dot';
-        const title=document.createElement('span'); title.className='title'; title.textContent=item.title;
-        if(item.done) title.classList.add('done');
-        left.appendChild(dot); left.appendChild(title);
-        const actions=document.createElement('div'); actions.className='actions';
-
-        const complete=document.createElement('button'); complete.className='btn-ghost'; complete.textContent=item.done?'Undo':'Complete';
-        complete.addEventListener('click',()=>{item.done=!item.done; saveState(); render();});
-
-        const edit=document.createElement('button'); edit.className='btn-ghost'; edit.textContent='Edit';
-        edit.addEventListener('click',()=>{
-          const newTitle=prompt('Edit homework:', item.title);
-          if(newTitle!==null && newTitle.trim()){ item.title=newTitle.trim(); saveState(); render(); }
-        });
-
-        const del=document.createElement('button'); del.className='btn-ghost'; del.textContent='Delete';
-        del.addEventListener('click',()=>{state.homework=state.homework.filter(h=>h.id!==item.id); saveState(); render();});
-
-        actions.appendChild(complete);
-        actions.appendChild(edit);
-        actions.appendChild(del);
-        li.appendChild(left); li.appendChild(actions);
-        hwList.appendChild(li);
-      });
-      updateStats();
     }
 
-    // Add handlers
-    document.getElementById('addTask').addEventListener('click',()=>{
-      const v=document.getElementById('taskInput').value.trim();
-      if(!v) return; state.tasks.push({id:genId(),title:v,done:false});
-      document.getElementById('taskInput').value=''; saveState(); render();
-    });
-    document.getElementById('taskInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('addTask').click();});
-
-    document.getElementById('addHw').addEventListener('click',()=>{
-      const v=document.getElementById('hwInput').value.trim();
-      if(!v) return; state.homework.push({id:genId(),title:v,done:false});
-      document.getElementById('hwInput').value=''; saveState(); render();
-    });
-    document.getElementById('hwInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('addHw').click();});
-
-    document.getElementById('clearTasks').addEventListener('click',()=>{
-      if(confirm('Clear all tasks?')){state.tasks=[];saveState();render();}
-    });
-    document.getElementById('clearHw').addEventListener('click',()=>{
-      if(confirm('Clear all homework?')){state.homework=[];saveState();render();}
-    });
-
-    function updateStats(){
-      document.getElementById('tasksCount').textContent = state.tasks.length;
-      document.getElementById('hwCount').textContent = state.homework.length;
-      document.getElementById('doneCount').textContent = state.tasks.filter(t=>t.done).length + state.homework.filter(h=>h.done).length;
+    // Google Logout
+    function googleLogout() {
+      firebase.auth().signOut().then(function() {
+        localStorage.removeItem("nirvaan_user");
+        location.reload();
+      });
     }
 
-    // Navigation
-    document.querySelectorAll('nav button').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-        document.getElementById(btn.dataset.page).classList.add('active');
-      });
-    });
-
-    render();
+    checkAuth();
   </script>
 </body>
 </html>
